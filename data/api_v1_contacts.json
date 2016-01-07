@@ -1,0 +1,21 @@
+[{
+    "id": 1,
+    "name": "John Smith",
+    "email": "john.smith@gmail.com",
+    "gender": "male"
+},{
+    "id": 2,
+    "name": "Allen Davis",
+    "email": "allendavis@outlook.com",
+    "gender": "male"
+},{
+    "id": 3,
+    "name": "Victor Krun",
+    "email": "vkrun@aol.com",
+    "gender": "male"
+},{
+    "id": 4,
+    "name": "Anne Dwarson",
+    "email": "anne.dwarson2@gmail.com",
+    "gender": "female"
+}]
