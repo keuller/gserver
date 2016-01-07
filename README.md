@@ -10,7 +10,7 @@ Sometimes we need a web server to prototype using static files and validate some
 
 Usage
 -------
-You can achieve that, creating files inside **data** folder located at current directory and **gserver** will transform those files in REST endpoints. In the  **data** folder, we have 3 JSON files, named:
+You can achieve that, creating JSON files inside the **data** folder located at current directory and **gserver** will transform those files in REST endpoints. In the  **data** folder, we have 3 JSON files, named:
 
 ```
 Using the api_v1_contacts.json file will be generated an endpoint like: /api/v1/contacts
@@ -32,17 +32,19 @@ $ gserver
 ```
 You will get the output like this:
 ```
-$ gserver
-Go Server version 1.0.0
-Static directory file /Users/keuller/Development/sample
-creating handler for /doc
+$ gserver 
+Simple Go Server version 1.0.0
 Server is running at http://0.0.0.0:9000
+
+Current directory: /Users/keuller/Development/sample
+Adding handler for /doc
+Adding handler for /echo
 ```
 
 By default ```gserver``` starts running on ```9000``` port. But if you prefer to change that, just pass an argument ```--port=9090```, informing the new port to bind the server.
 
-Next Steps
+Web Sockets
 -----------
-Add support for WebSockets, slightly [WebSockets Demo](http://www.websocket.org/echo.html).
+**gserver** supports WebSockets echo, just like [WebSockets Echo](http://www.websocket.org/echo.html). You can test your Web socket connection using the ```/echo``` endpoint.
 
 Any suggestion ?
