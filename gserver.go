@@ -70,8 +70,17 @@ func readFiles() map[string]string {
 }
 
 func main() {
+    fmt.Println("Go Server version 1.0.0")
+    var port string = "9000"
+
     entries := readFiles()
     router := mux.NewRouter()
+
+    count := len(os.Args)
+    if count == 2 {
+        port = string(os.Args[1])
+        port = port[7:len(port)]
+    }
 
     // gets the current path
     dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -93,6 +102,6 @@ func main() {
     // provide static files from current directory
     router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(publicDir))))
 
-    fmt.Println("Server is running at http://0.0.0.0:9000")
-    http.ListenAndServe(":9000", router)
+    fmt.Println("Server is running at http://0.0.0.0:" + port)
+    http.ListenAndServe(":" + port, router)
 }
