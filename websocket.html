@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WebSockets</title>
+    <style type="text/css">
+        body {
+            font-family:Helvetica,Arial,Tahoma
+        }
+        input[type="text"] {
+            padding: 4px;
+            min-width: 250px;
+        }
+
+        button { padding: 5px; }
+
+        .form {
+            float: left;
+            width: 300px;
+            min-height: 230px;
+            border: 1px solid #000000;
+        }
+        .tracelog {
+            float: left;
+            width: 300px;
+            min-height: 230px;
+            border: 1px solid #000000;
+            margin-left: 10px;
+            padding: 5px;
+        }
+        .field {
+            display: block;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Echo WebSocket Test</h2>
+
+    <script type="text/javascript">
+        var output = null, btnConnect = null, btnDisconnect = null, btnSend = null
+
+        function toggle (active) {
+            var loc = document.getElementById('location'),
+                msg = document.getElementById('message')
+
+            loc.disabled = active
+            btnConnect.disabled = active
+            btnDisconnect.disabled = !active
+            btnSend.disabled = !active
+            msg.disabled = !active
+        }
+
+        function onOpen (e) {
+            writeToScreen('<span style="color:green;">[ CONNECTED ]</span>')
+            toggle(true)
+        }
+
+        function onClose (e) {
+            writeToScreen("<span>[ DISCONNECTED ]</span>");
+            toggle(false)
+        }
+
+        function onMessage (e) {
+            writeToScreen('<span style="color:blue;">RESPONSE: ' + e.data + '</span>');
+        }
+
+        function onError (e) {
+            writeToScreen('<span style="color:red">ERROR:</span> ' + e.data)
+        }
+
+        function init () {
+            output = document.getElementById('output')
+
+            btnConnect = document.getElementById('btnConnect')
+            btnConnect.onclick = doConnect
+
+            btnDisconnect = document.getElementById('btnDisconnect')
+            btnDisconnect.onclick = doDisconnect
+
+            btnSend = document.getElementById('btnSend')
+            btnSend.onclick = doSend
+        }
+
+        function sendMessage (message) {
+            writeToScreen('SENT: ' + message)
+            client.send(message)
+        }
+
+        function writeToScreen (message) {
+            var p = document.createElement('p')
+            p.style.wordWrap = 'break-word'
+            p.innerHTML = message
+            output.appendChild(p)
+        }
+
+        function doConnect (e) {
+            var location = document.getElementById('location').value
+
+            while (output.firstChild) {
+                output.removeChild(output.firstChild);
+            }
+
+            client = new WebSocket(location)
+            client.onopen = function (e) { onOpen(e) }
+            client.onclose = function (e) { onClose(e) }
+            client.onmessage = function (e) { onMessage(e) }
+            client.onerror = function (e) { onError(e) }
+        }
+
+        function doDisconnect (e) {
+            client.close()
+            document.getElementById('message').value = ''
+        }
+
+        function doSend (e) {
+            var message = document.getElementById('message').value
+            if (message !== '') {
+                sendMessage(message)
+            }
+        }
+
+        window.addEventListener('load', init, false)
+    </script>
+
+    <br/>
+
+    <div>
+        <div class="form">
+            <form id="">
+                <div class="field">
+                    <button id="btnConnect" type="button">Connect</button>
+                    <button id="btnDisconnect" type="button" disabled="disabled">Disconnect</button>
+                </div>
+
+                <div class="field">
+                    <label for="location">Location</label><br/>
+                    <input type="text" id="location" name="location" maxlength="50" value="ws://localhost:9000/echo" />
+                </div>
+
+                <div class="field">
+                    <label for="message">Message</label><br/>
+                    <input type="text" id="message" name="message" maxlength="50" />
+                </div>
+
+                <div class="field">
+                    <button type="button" id="btnSend" disabled="disabled">Send</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="tracelog">
+            <div id="output"><div>
+        </div>
+    </div>
+
+</body>
+</html>

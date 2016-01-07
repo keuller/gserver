@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "github.com/gorilla/mux"
+    "github.com/gorilla/websocket"
     "io/ioutil"
     "net/http"
     s "strings"
@@ -11,7 +12,7 @@ import (
 )
 
 func index(res http.ResponseWriter, req *http.Request) {
-    var b string = `<html><title>JSON Server</title><body style='font-family:Helvetica,Arial,Tahoma'><h2>Simple Server is works!</h2>` +
+    var b string = `<html><title>gserver</title><body style='font-family:Helvetica,Arial,Tahoma'><h2>Simple Go Server works!</h2>` +
                    `<p>Put your JSON files inside <strong>data</strong> folder.</p>` +
                    `<p>For example using the pattern <strong>'api_v1_todos.json'</strong> the  URL <strong>'/api/v1/todos'</strong> will be generated automatically, providing the content of JSON file.</p></body></html>`
 
@@ -19,6 +20,32 @@ func index(res http.ResponseWriter, req *http.Request) {
     res.Header().Set("Content-Type", "text/html;charset=utf-8")
     res.WriteHeader(http.StatusOK)
     fmt.Fprintf(res, b)
+}
+
+func webSocket(res http.ResponseWriter, req *http.Request) {
+    var upgrader = websocket.Upgrader{
+        ReadBufferSize:  1024,
+        WriteBufferSize: 1024,
+        CheckOrigin: func(r *http.Request) bool { return true },
+    }
+
+    res.Header().Set("Access-Control-Allow-Origin", "*")
+
+    conn, err := upgrader.Upgrade(res, req, nil)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+
+    for {
+        messageType, p, err := conn.ReadMessage()
+        if err != nil {
+            return
+        }
+        if err = conn.WriteMessage(messageType, p); err != nil {
+            return
+        }
+    }
 }
 
 func createHandler(file string) func(res http.ResponseWriter, req *http.Request) {
@@ -70,7 +97,6 @@ func readFiles() map[string]string {
 }
 
 func main() {
-    fmt.Println("Go Server version 1.0.0")
     var port string = "9000"
 
     entries := readFiles()
@@ -88,20 +114,29 @@ func main() {
         return
     }
 
-    publicDir := string(dir)
-    fmt.Println("Static directory file", publicDir)
+    fmt.Println("Simple Go Server version 1.0.0")
+    fmt.Println("Server is running at http://0.0.0.0:" + port)
+    fmt.Println("")
 
+    publicDir := string(dir)
+    fmt.Println("Current directory:", publicDir)
+
+    // simple doc page
+    fmt.Println("Adding handler for /doc")
+    router.HandleFunc("/doc", index)
+
+    // websockets
+    fmt.Println("Adding handler for /echo")
+    router.HandleFunc("/echo", webSocket)
+
+    // register all 'simulated' endpoints
     for path, file := range entries {
-        fmt.Println("creating handler for", path)
+        fmt.Println("Adding handler for", path)
         router.HandleFunc(path, createHandler(file))
     }
-
-    fmt.Println("creating handler for /doc")
-    router.HandleFunc("/doc", index)
 
     // provide static files from current directory
     router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(publicDir))))
 
-    fmt.Println("Server is running at http://0.0.0.0:" + port)
     http.ListenAndServe(":" + port, router)
 }
