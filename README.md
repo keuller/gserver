@@ -33,16 +33,16 @@ $ gserver
 You will get the output like this:
 ```
 $ gserver
-Go Server version 1.0.0
+Go Server version 1.1.0
 Static directory file /Users/keuller/Development/sample
 creating handler for /doc
 Server is running at http://0.0.0.0:9000
 ```
 
-By default ```gserver``` starts running on ```9000``` port. But if you prefer to change that, just pass an argument ```--port=9090```, informing the new port to bind the server.
+By default ```gserver``` starts running on ```9000``` port listen all IP ```0.0.0.0```. But if you prefer to change that, just pass an argument ```--addr=127.0.0.1``` or ```--port=9090```, informing the specific IP address or port to bind the server.
 
 Next Steps
 -----------
-Add support for WebSockets, slightly [WebSockets Demo](http://www.websocket.org/echo.html).
+Help me with good sugestions to include in **gserver** or fork the project.
 
 Any suggestion ?

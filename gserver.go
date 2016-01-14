@@ -96,16 +96,46 @@ func readFiles() map[string]string {
     return entries
 }
 
+func get_addr(val ...string) string {
+    for _, str := range val {
+        if s.HasPrefix(str, "--addr") {
+            return str[7:len(str)]
+        }
+    }
+    return ""
+}
+
+func get_port(val ...string) string {
+    for _, str := range val {
+        if s.HasPrefix(str, "--port") {
+            return str[7:len(str)]
+        }
+    }
+    return ""
+}
+
 func main() {
+    var addr string = "0.0.0.0"
     var port string = "9000"
 
     entries := readFiles()
     router := mux.NewRouter()
 
     count := len(os.Args)
+    if count == 3 {
+      addr = get_addr(string(os.Args[1]), string(os.Args[2]))
+      port = get_port(string(os.Args[1]), string(os.Args[2]))
+    }
+
     if count == 2 {
-        port = string(os.Args[1])
-        port = port[7:len(port)]
+      addr = get_addr(string(os.Args[1]))
+      if addr == "" {
+        addr = "0.0.0.0"
+      }
+      port = get_port(string(os.Args[1]))
+      if port == "" {
+        port = "9000"
+      }
     }
 
     // gets the current path
@@ -114,8 +144,8 @@ func main() {
         return
     }
 
-    fmt.Println("Simple Go Server version 1.0.0")
-    fmt.Println("Server is running at http://0.0.0.0:" + port)
+    fmt.Println("Simple Go Server version 1.1.0")
+    fmt.Println("Server is running at http://"+ addr +":" + port)
     fmt.Println("")
 
     publicDir := string(dir)
@@ -138,5 +168,5 @@ func main() {
     // provide static files from current directory
     router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(publicDir))))
 
-    http.ListenAndServe(":" + port, router)
+    http.ListenAndServe(addr + ":" + port, router)
 }
