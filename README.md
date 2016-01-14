@@ -47,6 +47,7 @@ By default ```gserver``` starts running on ```9000``` port listen all IP ```0.0.
 
 Web Sockets
 -----------
+You can test your websocket connection through the ```/echo``` endpoint. We provide a ***websocket.html*** file that you can use for tests.
 
 Help me with good sugestions to include in **gserver** or fork the project.
 

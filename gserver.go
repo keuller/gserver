@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "log"
     "github.com/gorilla/mux"
     "github.com/gorilla/websocket"
     "io/ioutil"
@@ -66,20 +67,21 @@ func readFiles() map[string]string {
     sep := string(os.PathSeparator)
     dir := "."+ sep + "data"
 
+    entries := make(map[string]string, 0)
+
     // checks if directory exists
     _, err := os.Stat(dir)
     if err != nil || os.IsNotExist(err) {
-        os.Mkdir(dir, 0766)
+      return entries
     }
 
     // reads directory 'data'
     files, err := ioutil.ReadDir(dir)
     if err != nil {
-        panic(err)
-        return nil
+        log.Println("Local 'data' dir couldn't be read.")
+        return entries
     }
 
-    entries := make(map[string]string, 0)
     var fileName string
     var canonical string
     var path string
@@ -118,6 +120,7 @@ func main() {
     var addr string = "0.0.0.0"
     var port string = "9000"
 
+    log.SetPrefix("[gserver] ")
     entries := readFiles()
     router := mux.NewRouter()
 
@@ -144,7 +147,7 @@ func main() {
         return
     }
 
-    fmt.Println("Simple Go Server version 1.1.0")
+    fmt.Println("Simple Go Server version 1.1.1")
     fmt.Println("Server is running at http://"+ addr +":" + port)
     fmt.Println("")
 
