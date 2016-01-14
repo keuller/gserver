@@ -10,7 +10,7 @@ Sometimes we need a web server to prototype using static files and validate some
 
 Usage
 -------
-You can achieve that, creating files inside **data** folder located at current directory and **gserver** will transform those files in REST endpoints. In the  **data** folder, we have 3 JSON files, named:
+You can achieve that, creating JSON files inside the **data** folder located at current directory and **gserver** will transform those files in REST endpoints. In the  **data** folder, we have 3 JSON files, named:
 
 ```
 Using the api_v1_contacts.json file will be generated an endpoint like: /api/v1/contacts
@@ -37,12 +37,17 @@ Go Server version 1.1.0
 Static directory file /Users/keuller/Development/sample
 creating handler for /doc
 Server is running at http://0.0.0.0:9000
+
+Current directory: /Users/keuller/Development/sample
+Adding handler for /doc
+Adding handler for /echo
 ```
 
 By default ```gserver``` starts running on ```9000``` port listen all IP ```0.0.0.0```. But if you prefer to change that, just pass an argument ```--addr=127.0.0.1``` or ```--port=9090```, informing the specific IP address or port to bind the server.
 
-Next Steps
+Web Sockets
 -----------
+
 Help me with good sugestions to include in **gserver** or fork the project.
 
 Any suggestion ?
