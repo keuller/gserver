@@ -34,7 +34,7 @@ func webSocket(res http.ResponseWriter, req *http.Request) {
 
     conn, err := upgrader.Upgrade(res, req, nil)
     if err != nil {
-        fmt.Println(err)
+        log.Fatal(err)
         return
     }
 
@@ -147,24 +147,23 @@ func main() {
         return
     }
 
-    fmt.Println("Simple Go Server version 1.1.1")
-    fmt.Println("Server is running at http://"+ addr +":" + port)
-    fmt.Println("")
+    log.Println("Simple Go Server version 1.1.2")
+    log.Println("Server is running at http://"+ addr +":" + port)
 
     publicDir := string(dir)
-    fmt.Println("Current directory:", publicDir)
+    log.Println("Using directory:", publicDir)
 
     // simple doc page
-    fmt.Println("Adding handler for /doc")
+    log.Println("Adding handler for /doc")
     router.HandleFunc("/doc", index)
 
     // websockets
-    fmt.Println("Adding handler for /echo")
+    log.Println("Adding handler for /echo")
     router.HandleFunc("/echo", webSocket)
 
     // register all 'simulated' endpoints
     for path, file := range entries {
-        fmt.Println("Adding handler for", path)
+        log.Println("Adding handler for", path)
         router.HandleFunc(path, createHandler(file))
     }
 

@@ -33,7 +33,7 @@ $ gserver
 You will get the output like this:
 ```
 $ gserver
-Go Server version 1.1.0
+Go Server version 1.1.2
 Static directory file /Users/keuller/Development/sample
 creating handler for /doc
 Server is running at http://0.0.0.0:9000
