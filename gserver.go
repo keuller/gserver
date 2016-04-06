@@ -14,8 +14,11 @@ import (
 	s "strings"
 )
 
-// App version
-var version = "1.2.0"
+// App build information
+var (
+  Version string
+	Build string
+)
 
 type indexHandler func(http.ResponseWriter, *http.Request)
 
@@ -165,7 +168,8 @@ func main() {
 
 	router := mux.NewRouter()
 
-	log.Println("Simple Go Server version " + version)
+	log.Println("Simple Go Server version " + Version)
+	log.Println("(build " + Build +")")
 
 	// Index page
 	index := getIndex(entries)
