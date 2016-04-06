@@ -44,7 +44,8 @@ func getIndex(entries map[string]string) indexHandler {
 				<h2>No files to serve</h2>
 				<p>Put some JSON files to be served inside a folder. The default name is <strong>data</strong> in the startup folder.</p>
 				<p>The filenames will define the REST API. For example, using the name <strong>'api_v1_todos.json'</strong> will result in the URL endpoint
-				<strong>'/api/v1/todos'</strong> providing the content of JSON file.</p>
+				<strong>'/api/v1/todos'</strong> providing the content of JSON file. <strong>'api_v1_todos_{id:[0-9]+}.json'</strong> will result in the URL endpoint
+				<strong>'/api/v1/todos/<number>'</strong> where the regex must match.</p>
 				</body></html>`
 
 			res.Header().Set("Access-Control-Allow-Origin", "*")
