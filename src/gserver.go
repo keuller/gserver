@@ -67,7 +67,7 @@ func getIndex(entries map[string]string) indexHandler {
 		res.Header().Set("Access-Control-Allow-Origin", "*")
 		res.Header().Set("Content-Type", "text/html;charset=utf-8")
 		res.WriteHeader(http.StatusOK)
-		fmt.Fprintf(res, APIDataStart +restUrls+ APIDataEnd)
+		fmt.Fprintf(res, APIDataStart+restUrls+APIDataEnd)
 	}
 
 }
@@ -98,17 +98,13 @@ func webSocket(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func createHandler(path string, file string) func(res http.ResponseWriter, req *http.Request) {
+func createHandler(path string, fileData string) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
-		content, err := ioutil.ReadFile(file)
-		if err != nil {
-			return
-		}
 
 		res.Header().Set("Access-Control-Allow-Origin", "*")
 		res.Header().Set("Content-Type", "application/json;charset=utf-8")
 		res.WriteHeader(http.StatusOK)
-		fmt.Fprintln(res, string(content))
+		fmt.Fprintln(res, fileData)
 		if verbose {
 			log.Println("GET " + path)
 		}
@@ -123,7 +119,7 @@ func isDir(pth string) (bool, error) {
 	return fi.IsDir(), nil
 }
 
-// Validate data directory
+// Validate data directories and read all data
 func readFiles() map[string]string {
 
 	sep := string(os.PathSeparator)
@@ -156,7 +152,10 @@ func readFiles() map[string]string {
 		if s.HasSuffix(fileName, ".json") && !files[i].IsDir() {
 			canonical = fileName[0 : len(fileName)-5]
 			path = "/" + s.Replace(canonical, "_", "/", -1)
-			entries[path] = "." + sep + dataDir + sep + fileName
+			content, err := ioutil.ReadFile(dataDir + sep + fileName)
+			if err == nil {
+				entries[path] = string(content)
+			}
 		}
 	}
 
@@ -188,11 +187,11 @@ func main() {
 	}
 
 	// Register all 'simulated' endpoints
-	for path, file := range entries {
+	for path, fileData := range entries {
 		if verbose {
 			log.Println("Adding handler for", path)
 		}
-		router.HandleFunc(path, createHandler(path, file))
+		router.HandleFunc(path, createHandler(path, fileData))
 	}
 
 	addrPort := addr + ":" + port

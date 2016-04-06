@@ -1,54 +1,50 @@
 Simple GO Web Server
 ====================
 
-The idea of this utility is start a simple Web server to provide a current directory as static dir.
-This utility was written in Golang, that means you can run it in Windows, Linux and OSX.
+The idea of this utility is to start a simple web server that returns JSON data on REST-endpoints defined by the name of the JSON files.
 
 Motivation
 -------------
-Sometimes we need a web server to prototype using static files and validate some communication with the server. The **gserver** utility brings it to us. **gserver** can also transform flat JSON files in "Rest endpoints" to simulate load some data from the server.
+Sometimes we need a web server to prototype using static files and validate some communication with the server. The **gserver** can transform flat JSON files to REST endpoints to simulate reading data from a backend server.
 
 Usage
 -------
-You can achieve that, creating JSON files inside the **data** folder located at current directory and **gserver** will transform those files in REST endpoints. In the  **data** folder, we have 3 JSON files, named:
+Create some JSON files in a folder, by default called **data** in the current directory. When started, **gserver** will transform those files into REST endpoints. In the  **data** folder, we have some JSON files, named:
 
 ```
-Using the api_v1_contacts.json file will be generated an endpoint like: /api/v1/contacts
-Using the api_v1_todos_1.json file will be generated an endpoint like: /api/v1/todos/1
-Using the api_v1_todos.json file will be generated an endpoint like: /api/v1/todos
+Using the api_v1_contacts.json file will generate an endpoint like: /api/v1/contacts
+Using the api_v1_todos.json file will generate an endpoint like: /api/v1/todos
+Using the api_v1_todos_{id:[0-9]+}.json file will generate an endpoint like: /api/v1/todos/<number>
 ```
 
-Note: if you're running *gserver* and change the content of any file, you just must hit Ctrl+F5 on Windows to get the updated data. But if you create a new file while gserver is running, you must stop and start the server to load a new file.
+Note: if you're running *gserver* and change the content of any file or add a new one, you must stop and start the server to get the new endpoints and content.
 
-To run the utility, we recommend you copy the specific version of operating system (located at ```dist``` folder) and put inside ```/usr/local/bin``` (Linux and OSX) or ```c:\windows\system32``` for Windows.
+To run the utility, link to the correct version for your operating system (located in the ```bin``` folder) and put inside ```/usr/local/bin``` (Linux and OSX) or ```c:\windows\system32``` for Windows.
 
-Note: In case of Linux or OSX, maybe you need to set permission mode ```chmod +x gserver``` to execution.
+Note: In case of Linux or OSX, you might need to set permission mode ```chmod +x gserver``` to execution.
 
 Run
 ----
-To run the server, just type in your terminal:
+To run the server:
 ```
 $ gserver
 ```
 You will get the output like this:
 ```
-$ gserver
-Go Server version 1.1.2
-Static directory file /Users/keuller/Development/sample
-creating handler for /doc
-Server is running at http://0.0.0.0:9000
-
-Current directory: /Users/keuller/Development/sample
-Adding handler for /doc
-Adding handler for /echo
+> ./bin/gserver-osx -v
+[gserver] 2016/04/06 16:12:09 Server is running at http://0.0.0.0:9000
+[gserver] 2016/04/06 16:13:13 Simple Go Server version 1.2.0
+[gserver] 2016/04/06 16:13:13 (build e31ec5c3f0e6e8041273473f1f91405118c49f23)
+[gserver] 2016/04/06 16:13:13 Adding handler for /api/v1/todos
+[gserver] 2016/04/06 16:13:13 Adding handler for /api/v1/todos/{id:[0-9]+}
+[gserver] 2016/04/06 16:13:13 Adding handler for /api/v1/contacts
+[gserver] 2016/04/06 16:13:13 Server is running at http://0.0.0.0:9000
 ```
 
-By default ```gserver``` starts running on ```9000``` port listen all IP ```0.0.0.0```. But if you prefer to change that, just pass an argument ```--addr=127.0.0.1``` or ```--port=9090```, informing the specific IP address or port to bind the server.
+By default ```gserver``` starts running on ```9000``` port listening to all IPv4 on ```0.0.0.0```. But if you prefer to change that, just pass an argument ```-addr 127.0.0.1``` or ```-port 9090``` to set address or port.
 
 Web Sockets
 -----------
-You can test your websocket connection through the ```/echo``` endpoint. We provide a ***websocket.html*** file that you can use for tests.
+You can test a websocket connection against the ```/echo``` endpoint if you start the server with the ```-websocket``` flag. There is a ***websocket.html*** file that you can use for tests.
 
-Help me with good sugestions to include in **gserver** or fork the project.
-
-Any suggestion ?
+Suggestions for improvements are appreciated!
