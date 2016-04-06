@@ -1,26 +1,71 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
-	"path/filepath"
+	"sort"
 	s "strings"
 )
 
-func index(res http.ResponseWriter, req *http.Request) {
-	var b string = `<html><title>gserver</title><body style='font-family:Helvetica,Arial,Tahoma'><h2>Simple Go Server works!</h2>` +
-		`<p>Put your JSON files inside <strong>data</strong> folder.</p>` +
-		`<p>For example using the pattern <strong>'api_v1_todos.json'</strong> the  URL <strong>'/api/v1/todos'</strong> will be generated automatically, providing the content of JSON file.</p></body></html>`
+// App version
+var version = "1.2.0"
 
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "text/html;charset=utf-8")
-	res.WriteHeader(http.StatusOK)
-	fmt.Fprintf(res, b)
+type indexHandler func(http.ResponseWriter, *http.Request)
+
+// Commandline flags
+var verbose bool
+var echoWebsocket bool
+var addr string
+var port string
+var dataDir string
+
+func init() {
+	flag.BoolVar(&verbose, "v", false, "Verbose output")
+	flag.BoolVar(&echoWebsocket, "websocket", false, "Open a websocket on /echo")
+	flag.StringVar(&addr, "addr", "0.0.0.0", "Address to serve on")
+	flag.StringVar(&port, "port", "9000", "Port to listen on")
+	flag.StringVar(&dataDir, "data", "data", "json file names will be converted to rest paths")
+}
+
+func getIndex(entries map[string]string) indexHandler {
+	if len(entries) == 0 {
+		return func(res http.ResponseWriter, req *http.Request) {
+			const NO_DATA string = `<html><title>gserver</title><body>
+				<h2>No files to serve</h2>
+				<p>Put some JSON files to be served inside a folder. The default name is <strong>data</strong> in the startup folder.</p>
+				<p>The filenames will define the REST API. For example, using the name <strong>'api_v1_todos.json'</strong> will result in the URL endpoint
+				<strong>'/api/v1/todos'</strong> providing the content of JSON file.</p>
+				</body></html>`
+
+			res.Header().Set("Access-Control-Allow-Origin", "*")
+			res.Header().Set("Content-Type", "text/html;charset=utf-8")
+			res.WriteHeader(http.StatusOK)
+			fmt.Fprintf(res, NO_DATA)
+		}
+	} else {
+		// We have a rest API
+		return func(res http.ResponseWriter, req *http.Request) {
+			const API_DATA_START string = "<html><title>gserver</title><body><h2>The following endpoints are available:</h2>"
+			const API_DATA_END string = "</body></html>"
+			var urls []string
+			for key := range entries {
+				urls = append(urls, "\n<li><a href=\""+key+"\">"+key+"</a></li>")
+			}
+			sort.Strings(urls)
+			restUrls := "<ul style=\"list-style-type:none\">" + s.Join(urls, "") + "\n</ul>"
+			res.Header().Set("Access-Control-Allow-Origin", "*")
+			res.Header().Set("Content-Type", "text/html;charset=utf-8")
+			res.WriteHeader(http.StatusOK)
+			fmt.Fprintf(res, API_DATA_START+restUrls+API_DATA_END)
+		}
+	}
 }
 
 func webSocket(res http.ResponseWriter, req *http.Request) {
@@ -34,7 +79,7 @@ func webSocket(res http.ResponseWriter, req *http.Request) {
 
 	conn, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Not a web socket connection: %s \n", err)
 		return
 	}
 
@@ -63,23 +108,36 @@ func createHandler(file string) func(res http.ResponseWriter, req *http.Request)
 	}
 }
 
-func readFiles() map[string]string {
-	sep := string(os.PathSeparator)
-	dir := "." + sep + "data"
+func isDir(pth string) (bool, error) {
+	fi, err := os.Stat(pth)
+	if err != nil {
+		return false, err
+	}
+	return fi.IsDir(), nil
+}
 
+// Validate data directory
+func readFiles() map[string]string {
+
+	sep := string(os.PathSeparator)
 	entries := make(map[string]string, 0)
 
-	// checks if directory exists
-	_, err := os.Stat(dir)
-	if err != nil || os.IsNotExist(err) {
+	// Check if directory exists
+	isD, err := isDir(dataDir)
+	if !isD || err != nil {
+		log.Println("No data directory found: " + dataDir)
 		return entries
 	}
 
-	// reads directory 'data'
-	files, err := ioutil.ReadDir(dir)
+	// Get files from the data directory
+	files, err := ioutil.ReadDir(dataDir)
 	if err != nil {
-		log.Println("Local 'data' dir couldn't be read.")
+		log.Println("Local dir '" + dataDir + "' couldn't be read.")
 		return entries
+	}
+
+	if len(files) == 0 {
+		log.Println("No files found in directory " + dataDir)
 	}
 
 	var fileName string
@@ -91,84 +149,46 @@ func readFiles() map[string]string {
 		if s.HasSuffix(fileName, ".json") && !files[i].IsDir() {
 			canonical = fileName[0 : len(fileName)-5]
 			path = "/" + s.Replace(canonical, "_", "/", -1)
-			entries[path] = "." + sep + "data" + sep + fileName
+			entries[path] = "." + sep + dataDir + sep + fileName
 		}
 	}
 
 	return entries
 }
 
-func get_addr(val ...string) string {
-	for _, str := range val {
-		if s.HasPrefix(str, "--addr") {
-			return str[7:len(str)]
-		}
-	}
-	return ""
-}
-
-func get_port(val ...string) string {
-	for _, str := range val {
-		if s.HasPrefix(str, "--port") {
-			return str[7:len(str)]
-		}
-	}
-	return ""
-}
-
 func main() {
-	var addr string = "0.0.0.0"
-	var port string = "9000"
+	flag.Parse()
 
 	log.SetPrefix("[gserver] ")
+
 	entries := readFiles()
+
 	router := mux.NewRouter()
 
-	count := len(os.Args)
-	if count == 3 {
-		addr = get_addr(string(os.Args[1]), string(os.Args[2]))
-		port = get_port(string(os.Args[1]), string(os.Args[2]))
+	log.Println("Simple Go Server version " + version)
+
+	// Index page
+	index := getIndex(entries)
+	router.HandleFunc("/", index)
+
+	// Websocket
+	if echoWebsocket {
+		log.Println("Adding handler for /echo")
+		router.HandleFunc("/echo", webSocket)
 	}
 
-	if count == 2 {
-		addr = get_addr(string(os.Args[1]))
-		if addr == "" {
-			addr = "0.0.0.0"
-		}
-		port = get_port(string(os.Args[1]))
-		if port == "" {
-			port = "9000"
-		}
-	}
-
-	// gets the current path
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		return
-	}
-
-	log.Println("Simple Go Server version 1.2.0")
-	log.Println("Server is running at http://" + addr + ":" + port)
-
-	publicDir := string(dir)
-	log.Println("Using directory:", publicDir)
-
-	// simple doc page
-	log.Println("Adding handler for /doc")
-	router.HandleFunc("/doc", index)
-
-	// websockets
-	log.Println("Adding handler for /echo")
-	router.HandleFunc("/echo", webSocket)
-
-	// register all 'simulated' endpoints
+	// Register all 'simulated' endpoints
 	for path, file := range entries {
 		log.Println("Adding handler for", path)
 		router.HandleFunc(path, createHandler(file))
 	}
 
-	// provide static files from current directory
-	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(publicDir))))
+	addrPort := addr + ":" + port
+	listener, err := net.Listen("tcp4", addrPort)
+	if err != nil {
+		log.Fatal("Unable to ", err)
+	}
 
-	http.ListenAndServe(addr+":"+port, router)
+	log.Println("Server is running at http://" + addrPort)
+	log.Fatal(http.Serve(listener, router))
 }
