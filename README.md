@@ -25,23 +25,33 @@ Note: In case of Linux or OSX, you might need to set permission mode ```chmod +x
 
 Run
 ----
-To run the server:
+The available flags are:
 ```
-$ gserver
+Usage of ./bin/gserver-osx:
+  -addr string
+        Address to serve on (default "0.0.0.0")
+  -data string
+        json file names will be converted to rest paths (default "data")
+  -port string
+        Port to listen on (default "9000")
+  -v    Verbose output
+  -websocket
+        Open a websocket on /echo
 ```
-You will get the output like this:
+Starting verbosely will get the output like this:
 ```
 > ./bin/gserver-osx -v
-[gserver] 2016/04/06 16:12:09 Server is running at http://0.0.0.0:9000
 [gserver] 2016/04/06 16:13:13 Simple Go Server version 1.2.0
 [gserver] 2016/04/06 16:13:13 (build e31ec5c3f0e6e8041273473f1f91405118c49f23)
+[gserver] 2016/04/06 16:13:13 Adding handler for /api/v1/contacts
 [gserver] 2016/04/06 16:13:13 Adding handler for /api/v1/todos
 [gserver] 2016/04/06 16:13:13 Adding handler for /api/v1/todos/{id:[0-9]+}
-[gserver] 2016/04/06 16:13:13 Adding handler for /api/v1/contacts
 [gserver] 2016/04/06 16:13:13 Server is running at http://0.0.0.0:9000
 ```
 
 By default ```gserver``` starts running on ```9000``` port listening to all IPv4 on ```0.0.0.0```. But if you prefer to change that, just pass an argument ```-addr 127.0.0.1``` or ```-port 9090``` to set address or port.
+
+The available endpoinds are listed on ```http://0.0.0.0:9000```.
 
 Web Sockets
 -----------
