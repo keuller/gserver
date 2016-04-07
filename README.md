@@ -29,13 +29,15 @@ The available flags are:
 ```
 Usage of ./bin/gserver-osx:
   -help|-h
-        Show all flags available
+        Show all available flags
   -addr string
         Address to serve on (default "0.0.0.0")
   -data string
-        json file names will be converted to rest paths (default "data")
+        JSON file names will be converted to rest paths (default "data")
   -port string
         Port to listen on (default "9000")
+  -static string
+        Files in this folder will be served on /
   -v    Verbose output
   -websocket
         Open a websocket on /echo

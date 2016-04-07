@@ -39,8 +39,8 @@ func init() {
 	flag.BoolVar(&echoWebsocket, "websocket", false, "Open a websocket on /echo")
 	flag.StringVar(&addr, "addr", "0.0.0.0", "Address to serve on")
 	flag.StringVar(&port, "port", "9000", "Port to listen on")
-	flag.StringVar(&dataDir, "data", "data", "json file names will be converted to rest paths")
-	flag.StringVar(&staticDir, "static", "", "files in this folder will be served on the /static endpoint")
+	flag.StringVar(&dataDir, "data", "data", "JSON file names will be converted to rest paths")
+	flag.StringVar(&staticDir, "static", "", "Files in this folder will be served on /")
 }
 
 func getIndex(entries map[string]string) indexHandler {
