@@ -24,3 +24,4 @@ _testmain.go
 *.swp
 
 bin/gserver
+.DS_Store
