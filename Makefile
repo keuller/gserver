@@ -9,7 +9,7 @@ export GOPATH
 
 BINARY=./bin/gserver
 
-VERSION=1.2.0
+VERSION=1.2.1
 BUILD=`git rev-parse HEAD`
 
 LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD}"
