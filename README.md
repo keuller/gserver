@@ -28,6 +28,8 @@ Run
 The available flags are:
 ```
 Usage of ./bin/gserver-osx:
+  -help|-h
+        Show all flags available
   -addr string
         Address to serve on (default "0.0.0.0")
   -data string

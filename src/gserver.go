@@ -14,6 +14,8 @@ import (
 	s "strings"
 )
 
+const HTML_TYPE string = "text/html;charset=utf-8"
+
 // App build information
 var (
 	Version string
@@ -23,12 +25,14 @@ var (
 type indexHandler func(http.ResponseWriter, *http.Request)
 
 // Commandline flags
-var verbose bool
-var echoWebsocket bool
-var addr string
-var port string
-var dataDir string
-var staticDir string
+var (
+	verbose bool
+	echoWebsocket bool
+	addr string
+	port string
+	dataDir string
+	staticDir string
+)
 
 func init() {
 	flag.BoolVar(&verbose, "v", false, "Verbose output")
@@ -51,7 +55,7 @@ func getIndex(entries map[string]string) indexHandler {
 				</body></html>`
 
 			res.Header().Set("Access-Control-Allow-Origin", "*")
-			res.Header().Set("Content-Type", "text/html;charset=utf-8")
+			res.Header().Set("Content-Type", HTML_TYPE)
 			res.WriteHeader(http.StatusOK)
 			fmt.Fprintf(res, NoData)
 		}
@@ -62,17 +66,14 @@ func getIndex(entries map[string]string) indexHandler {
 		const APIDataEnd string = "</body></html>"
 		var urls []string
 		for key := range entries {
-			urls = append(urls, "\n<li><a href=\""+key+"\">"+key+"</a></li>")
+			urls = append(urls, fmt.Sprintf("\n<li><a href=\"%s\">%s</a></li>", key, key))
 		}
 		sort.Strings(urls)
-		if staticDir != "" {
-			urls = append(urls, "\n<li>--------</li>\n<li><a href=\"/static/\">/static/</a></li>")
-		}
 		restUrls := "<ul style=\"list-style-type:none\">" + s.Join(urls, "") + "\n</ul>"
 		res.Header().Set("Access-Control-Allow-Origin", "*")
-		res.Header().Set("Content-Type", "text/html;charset=utf-8")
+		res.Header().Set("Content-Type", HTML_TYPE)
 		res.WriteHeader(http.StatusOK)
-		fmt.Fprintf(res, APIDataStart+restUrls+APIDataEnd)
+		fmt.Fprintf(res, APIDataStart + restUrls + APIDataEnd)
 	}
 }
 
@@ -104,7 +105,6 @@ func webSocket(res http.ResponseWriter, req *http.Request) {
 
 func createHandler(path string, fileData string) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
-
 		res.Header().Set("Access-Control-Allow-Origin", "*")
 		res.Header().Set("Content-Type", "application/json;charset=utf-8")
 		res.WriteHeader(http.StatusOK)
@@ -196,27 +196,21 @@ func main() {
 		router.HandleFunc(path, createHandler(path, fileData))
 	}
 
-	// Serve static files
-	if staticDir != "" {
-		// Check if directory exists
-		isD, err := isDir(staticDir)
-		if !isD || err != nil {
-			log.Fatal("No directory with static files found: " + staticDir)
-		}
-		if verbose {
-			log.Println("Serving static files from " + staticDir + " on " + "http://" + addrPort + "/static/")
-		}
-		staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir)))
-		// Use PathPrefix to handle both base directory and all files and folders in it.
-		router.PathPrefix("/static/").Handler(staticHandler)
-	}
-
 	// Websocket
 	if echoWebsocket {
 		log.Println("Adding handler for /echo")
 		router.HandleFunc("/echo", webSocket)
 	}
 
-	log.Println("Server is running at http://" + addrPort)
+	// Serve Static files on current directory, if exists index.html file
+	if staticDir != "" {
+		log.Println("Serving static content from " + staticDir + " on http://" + addrPort)
+		router.PathPrefix("/").Handler(http.FileServer(http.Dir(staticDir)))
+	} else {
+		// Endpoints page
+		log.Println("Server is running at http://" + addrPort)
+		router.HandleFunc("/", getIndex(entries))
+	}
+
 	log.Fatal(http.Serve(listener, router))
 }
