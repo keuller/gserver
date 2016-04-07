@@ -185,9 +185,6 @@ func main() {
 	router := mux.NewRouter()
 	entries := readFiles()
 
-	// Index page
-	router.HandleFunc("/", getIndex(entries))
-
 	// Register all 'simulated' endpoints
 	for path, fileData := range entries {
 		if verbose {
@@ -198,12 +195,17 @@ func main() {
 
 	// Websocket
 	if echoWebsocket {
-		log.Println("Adding handler for /echo")
+		log.Println("Adding websocket echo service on /echo")
 		router.HandleFunc("/echo", webSocket)
 	}
 
 	// Serve Static files on current directory, if exists index.html file
 	if staticDir != "" {
+		// Check if directory exists
+		isD, err := isDir(staticDir)
+		if !isD || err != nil {
+			log.Fatal("No directory with static files found: " + staticDir)
+		}
 		log.Println("Serving static content from " + staticDir + " on http://" + addrPort)
 		router.PathPrefix("/").Handler(http.FileServer(http.Dir(staticDir)))
 	} else {
