@@ -27,7 +27,7 @@ Run
 ----
 The available flags are:
 ```
-Usage of ./bin/gserver-osx:
+Usage of ./bin/gserver:
   -help|-h
         Show all available flags
   -addr string
@@ -44,7 +44,7 @@ Usage of ./bin/gserver-osx:
 ```
 Starting verbosely will get the output like this:
 ```
-> ./bin/gserver-osx -v
+> ./bin/gserver -v
 [gserver] 2016/04/06 16:13:13 Simple Go Server version 1.2.0
 [gserver] 2016/04/06 16:13:13 (build e31ec5c3f0e6e8041273473f1f91405118c49f23)
 [gserver] 2016/04/06 16:13:13 Adding handler for /api/v1/contacts

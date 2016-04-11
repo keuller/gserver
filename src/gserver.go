@@ -199,7 +199,7 @@ func main() {
 		router.HandleFunc("/echo", webSocket)
 	}
 
-	// Serve Static files on current directory, if exists index.html file
+	// Serve Static files from staticDir if it has been set
 	if staticDir != "" {
 		// Check if directory exists
 		isD, err := isDir(staticDir)
