@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/gorilla/handlers"
 	"io/ioutil"
 	"log"
 	"net"
@@ -162,6 +163,7 @@ func readFiles() map[string]string {
 			}
 		}
 	}
+
 	return entries
 }
 
@@ -214,5 +216,5 @@ func main() {
 		router.HandleFunc("/", getIndex(entries))
 	}
 
-	log.Fatal(http.Serve(listener, router))
+	log.Fatal(http.Serve(listener, handlers.CompressHandler(router)))
 }

@@ -8,7 +8,7 @@ export GOPATH
 
 BINARY=./bin/gserver
 
-VERSION=1.2.2
+VERSION=1.3.2
 BUILD=`git rev-parse HEAD`
 
 LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD}"
@@ -64,6 +64,7 @@ vendor_get: vendor_clean
 	GOPATH=${PWD}/_vendor go get -d -u -v \
 	github.com/gorilla/context \
 	github.com/gorilla/websocket \
+	github.com/gorilla/handlers \
 	github.com/gorilla/mux
 
 vendor_update: vendor_get
