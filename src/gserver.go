@@ -31,6 +31,7 @@ var (
 	addr string
 	port string
 	dataDir string
+	staticDir string
 )
 
 func init() {
@@ -38,7 +39,8 @@ func init() {
 	flag.BoolVar(&echoWebsocket, "websocket", false, "Open a websocket on /echo")
 	flag.StringVar(&addr, "addr", "0.0.0.0", "Address to serve on")
 	flag.StringVar(&port, "port", "9000", "Port to listen on")
-	flag.StringVar(&dataDir, "data", "data", "json file names will be converted to rest paths")
+	flag.StringVar(&dataDir, "data", "data", "JSON file names will be converted to rest paths")
+	flag.StringVar(&staticDir, "static", "", "Files in this folder will be served on /")
 }
 
 func getIndex(entries map[string]string) indexHandler {
@@ -63,7 +65,6 @@ func getIndex(entries map[string]string) indexHandler {
 		const APIDataStart string = "<html><title>gserver</title><body><h2>The following endpoints are available:</h2>"
 		const APIDataEnd string = "</body></html>"
 		var urls []string
-
 		for key := range entries {
 			urls = append(urls, fmt.Sprintf("\n<li><a href=\"%s\">%s</a></li>", key, key))
 		}
@@ -74,7 +75,6 @@ func getIndex(entries map[string]string) indexHandler {
 		res.WriteHeader(http.StatusOK)
 		fmt.Fprintf(res, APIDataStart + restUrls + APIDataEnd)
 	}
-
 }
 
 func webSocket(res http.ResponseWriter, req *http.Request) {
@@ -123,30 +123,6 @@ func isDir(pth string) (bool, error) {
 	return fi.IsDir(), nil
 }
 
-func existIndexHtml() bool {
-	// Get files from the current directory
-	files, err := ioutil.ReadDir(".")
-	if err != nil {
-		log.Println("Current dir couldn't be read.")
-		return false
-	}
-
-	if len(files) == 0 {
-		log.Println("No files found in directory " + dataDir)
-		return false
-	}
-
-	var fileName string
-	for i := 0; i < len(files); i++ {
-		fileName = files[i].Name()
-		if !files[i].IsDir() && fileName == "index.html" {
-			return true
-		}
-	}
-
-	return false
-}
-
 // Validate data directories and read all data
 func readFiles() map[string]string {
 
@@ -186,29 +162,28 @@ func readFiles() map[string]string {
 			}
 		}
 	}
-
 	return entries
 }
 
 func main() {
 	flag.Parse()
-
 	log.SetPrefix("[gserver] ")
-
-	entries := readFiles()
-
-	router := mux.NewRouter()
 
 	if verbose {
 		log.Println("Simple Go Server version " + Version)
 		log.Println("(build " + Build + ")")
 	}
 
-	// Websocket
-	if echoWebsocket {
-		log.Println("Adding handler for /echo")
-		router.HandleFunc("/echo", webSocket)
+	addrPort := addr + ":" + port
+
+	// Check if port is available
+	listener, err := net.Listen("tcp4", addrPort)
+	if err != nil {
+		log.Fatal("Unable to ", err)
 	}
+
+	router := mux.NewRouter()
+	entries := readFiles()
 
 	// Register all 'simulated' endpoints
 	for path, fileData := range entries {
@@ -218,21 +193,26 @@ func main() {
 		router.HandleFunc(path, createHandler(path, fileData))
 	}
 
-	// Serve Static files on current directory, if exists index.html file
-	if existIndexHtml() {
-		router.PathPrefix("/").Handler(http.FileServer(http.Dir(".")))
+	// Websocket
+	if echoWebsocket {
+		log.Println("Adding websocket echo service on /echo")
+		router.HandleFunc("/echo", webSocket)
+	}
+
+	// Serve Static files from staticDir if it has been set
+	if staticDir != "" {
+		// Check if directory exists
+		isD, err := isDir(staticDir)
+		if !isD || err != nil {
+			log.Fatal("No directory with static files found: " + staticDir)
+		}
+		log.Println("Serving static content from " + staticDir + " on http://" + addrPort)
+		router.PathPrefix("/").Handler(http.FileServer(http.Dir(staticDir)))
 	} else {
 		// Endpoints page
-		endpoints := getIndex(entries)
-		router.HandleFunc("/", endpoints)
+		log.Println("Server is running at http://" + addrPort)
+		router.HandleFunc("/", getIndex(entries))
 	}
 
-	addrPort := addr + ":" + port
-	listener, err := net.Listen("tcp4", addrPort)
-	if err != nil {
-		log.Fatal("Unable to ", err)
-	}
-
-	log.Println("Server is running at http://" + addrPort)
 	log.Fatal(http.Serve(listener, router))
 }

@@ -1,4 +1,4 @@
-.PHONY: build fmt lint run test vendor_clean vendor_get vendor_update vet
+.PHONY: build fmt lint run test vendor_clean vendor_get vendor_update vet list
 
 # Prepend our _vendor directory to the system GOPATH
 # so that import path resolution will prioritize
@@ -6,10 +6,9 @@
 GOPATH := ${PWD}/_vendor:${GOPATH}
 export GOPATH
 
-
 BINARY=./bin/gserver
 
-VERSION=1.2.1
+VERSION=1.2.2
 BUILD=`git rev-parse HEAD`
 
 LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD}"
@@ -21,6 +20,15 @@ build:
 
 run: build
 	${BINARY}
+
+osx:
+	GOOS="darwin" GOARCH="amd64" go build ${LDFLAGS} -o ${BINARY}-osx ./src/*.go
+
+linux:
+	GOOS="linux" GOARCH="amd64" go build ${LDFLAGS} -o ${BINARY}-linux ./src/*.go
+
+windows:
+	GOOS="windows" GOARCH="amd64" go build ${LDFLAGS} -o ${BINARY}.exe ./src/*.go
 
 # http://golang.org/cmd/go/#hdr-Run_gofmt_on_package_sources
 fmt:
@@ -39,6 +47,9 @@ install:
 
 clean:
 	if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
+
+list:
+	    @$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
 vendor_clean:
 	rm -dRf ./_vendor/src
